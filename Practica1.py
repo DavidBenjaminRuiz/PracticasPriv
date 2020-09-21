@@ -23,12 +23,14 @@ def t_ETIQUETA(t):      #Funcion que identifica etiqueta
         print("ETIQUETA = null")
         return None
     Indice=LineaAnalizada.index(ETIQUETA.group())
-   
-    if Indice == 2 and LineaAnalizada[Indice].isalpha() :
-        print("ETIQUETA = "+ ETIQUETA.group()) 
+    Tamaño=ETIQUETA.group().strip()
+    if Indice == 2 and LineaAnalizada[Indice].isalpha():
+        if len(Tamaño)<=8:
+            print("ETIQUETA = "+ ETIQUETA.group()) 
+        else:
+            print("ETIQUETA = Error, longitud invalida")  
     else:
-        print("ETIQUETA = null")  
-             
+        print("ETIQUETA= null")         
 
 def t_CODOP(t):     #Funcion que identifica el CODOP
     LineaAnalizada= str(t)
@@ -43,7 +45,7 @@ def t_CODOP(t):     #Funcion que identifica el CODOP
         if Indice > 2 and len(nospace)<=5:#Si el CODOP no esta al inicio y la cadena no tiene más de 5 caracteres:   
             print("CODOP= "+ CoincideCODOP.group())
         else:
-            print("CODOP= null")
+            print("CODOP= Error, longitud invalida")
         if CoincideCODOP.group().__contains__("End") or CoincideCODOP.group().__contains__("end") or CoincideCODOP.group().__contains__("END"):#Si la coincidencia contiene End:
             sys.exit() #Finaliza el programa 
     else:
