@@ -1,5 +1,6 @@
-            ORG         $AB
-ET1         ORAA
-            ADCA        
-            WAV         FGVG
+            ORG         
+ET1         ORAA        
+            ADCA        b,PC
+            WAV         [D,PC]
+            ADDA        DOS_2
             END         ET1               

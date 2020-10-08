@@ -1,3 +1,6 @@
+from pandas.io.formats.style import no_mpl_message
+
+
 ETIQUETA: " "                                                           
 CODOP: " "
 OPERANDO: " "
@@ -58,30 +61,43 @@ def t_CODOP(t):     #Funcion que identifica el CODOP
 
     return resultado
 
-def t_OPERANDO(t):      #Funcion que identifica Operandos
+def t_OPERANDO(t): 
 
     LineaAnalizada= str(t)
+    patronIndexadoAcumIndirecto= r"\[([dD])(,)(PC|Y|X|SP)\]"
+    patronIndexadoAcum= r"(A|B|D)(,)(X|Y|SP|PC)"
+    patronAutoPrePostDecrementoIncremento= r"[1-8](,)[+|-]?(X|Y|SP)[+|-]?"
+    patronRelativo8_16 = r" ([a-zA-Z]?[a-z|_|0-9]*){1,8}"
+     
+   
+     
+    match= re.search(patronIndexadoAcum, LineaAnalizada, re.MULTILINE | re.IGNORECASE)
+    if match is None:
+        return None
+    OPERANDO= match.group()
+    if OPERANDO is not None:
+        print("OPERANDO= " + OPERANDO)
+        
 
-    #Busca un $,% o @ y si encuentra devuelve el operando correspondiente
-    Identificador_Porcentaje= LineaAnalizada.find("%") 
-    if Identificador_Porcentaje != -1:
-        OPERANDO=LineaAnalizada[Identificador_Porcentaje::].replace("]"," ").replace("'"," ").replace(",", " ")
-        return OPERANDO
+    match= re.search(patronRelativo8_16, LineaAnalizada, re.MULTILINE | re.IGNORECASE)
+    if match is None:
+        return None
+    OPERANDO= match.group()
+    if OPERANDO is not None:
+        print("OPERANDO= " + OPERANDO)
+            
 
-    Identificador_Arroba= LineaAnalizada.find("@")
-    if Identificador_Arroba != -1:
-        OPERANDO=LineaAnalizada[Identificador_Arroba::].replace("]"," ").replace("'"," ").replace(",", " ")
-        return OPERANDO
-
-    Identificador_Dinero= LineaAnalizada.find("$") 
-    if Identificador_Dinero != -1:
-        OPERANDO=LineaAnalizada[Identificador_Dinero::].replace("]"," ").replace("'"," ").replace(",", " ")
-        return OPERANDO
+    match= re.search(patronIndexadoAcumIndirecto, LineaAnalizada, re.MULTILINE | re.IGNORECASE)
+    if match is None:
+        return None
+    OPERANDO= match.group()
+    if OPERANDO is not None:
+        print("OPERANDO= " + OPERANDO)
+              
 
 
-    if Identificador_Arroba== -1 and Identificador_Dinero== -1 and Identificador_Porcentaje==-1:
-        OPERANDO = "null"
-        return OPERANDO
+  
+    
         
     #Los CODOP del txt en el tabot y muestra la informacion
 def buscar_enTabop(DataFrame, lista):
@@ -160,18 +176,17 @@ for i in range(0, len(lineas)):
     t_COMENTARIO(lineas[i])
     t_ETIQUETA(lineas[i])
     print(Fore.YELLOW + "CODOP= " + t_CODOP(lineas[i]) ) 
-    buscar_enTabop(Dataframe,lista)
+    #buscar_enTabop(Dataframe,lista)
     print(" ")
     
-    print("OPERANDO= " + t_OPERANDO(lineas[i]))
-    if llevaOperando(Dataframe , lista) and t_OPERANDO(lineas[i])== "null" :
-        print("Error, Debe llevar operando")
+    t_OPERANDO(lineas[i])
+    #if llevaOperando(Dataframe , lista) and t_OPERANDO(lineas[i])== "null" :
+    #    print("Error, Debe llevar operando")
 
-    if llevaOperando(Dataframe , lista) is False and t_OPERANDO(lineas[i]) != "null" :
-        print("Error, No debe llevar operando")
+    #if llevaOperando(Dataframe , lista) is False and t_OPERANDO(lineas[i]) != "null" :
+     #   print("Error, No debe llevar operando")
 
-    operando1=t_OPERANDO(lineas[i])
-    print(analizadorOperando(operando1))
+    
 
     lista=[None]                           #Vaciamos la lista para mayor limpieza
     print(" \n ")
