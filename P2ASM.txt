@@ -1,0 +1,6 @@
+            ORG         
+ET1         ORAA        
+            ADCA        b,PC
+            WAV         [D,PC]
+            ADDA        DOS_2
+            END         ET1               
