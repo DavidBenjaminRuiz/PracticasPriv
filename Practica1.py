@@ -87,7 +87,7 @@ def t_OPERANDO(t):
         IDXIND16BITS=  re.search(IndexadoIndirecto16bits, LineaAnalizada[Indice::], re.MULTILINE)
         APPDI=  re.search(AutoPrePostDecrementoIncremento, LineaAnalizada[Indice::], re.MULTILINE)
         IDXACUM= re.search(IndexadoAcum, LineaAnalizada[Indice::], re.MULTILINE)
-        IDXACUMIND=  re.search(IndexadoAcumIndirecto, LineaAnalizada[Indice::], re.MULTILINE)
+        IDXACUMIND=  re.search(IndexadoAcumIndirecto, LineaAnalizada[Indice::], re.MULTILINE})
         if DIRECTOS:
             resultado = DIRECTOS.group().replace("'", "")
             return resultado, "Directo, 2 bytes"
