@@ -1,9 +1,10 @@
+from re import match
 from pandas.io.formats.style import no_mpl_message
 
 
-ETIQUETA: " "                                                           
-CODOP: " "
-OPERANDO: " "
+ETIQUETA: None                                                           
+CODOP: None
+OPERANDO: None
 
 def t_COMENTARIO(t):     #Funcion que identifica comentarios
     LineaAnalizada= str(t)
@@ -61,43 +62,125 @@ def t_CODOP(t):     #Funcion que identifica el CODOP
 
     return resultado
 
-def t_OPERANDO(t): 
-
+def t_OPERANDO(t, rel, inm):
+    
     LineaAnalizada= str(t)
-    patronIndexadoAcumIndirecto= r"\[([dD])(,)(PC|Y|X|SP)\]"
-    patronIndexadoAcum= r"(A|B|D)(,)(X|Y|SP|PC)"
-    patronAutoPrePostDecrementoIncremento= r"[1-8](,)[+|-]?(X|Y|SP)[+|-]?"
-    patronRelativo8_16 = r" ([a-zA-Z]?[a-z|_|0-9]*){1,8}"
-     
-   
-     
-    match= re.search(patronIndexadoAcum, LineaAnalizada, re.MULTILINE | re.IGNORECASE)
-    if match is None:
-        return None
-    OPERANDO= match.group()
-    if OPERANDO is not None:
-        print("OPERANDO= " + OPERANDO)
+    
+    EsOperando= r'[\s]([@]|[%]|[$]|[0-9]|[,]|[-]|[[]|A|B|D|[\w_])'
+    Directo=r"[\s]([%][0-1]{1,8}|[$][0-9A-F]{1,2}|[@][0-3][0-7]?[0-7]?|\d|\d\d|1[0-9][0-9]|2[0-4][0-9]|2[5][0-5])(')"
+    Extendido=(r"[\s]([%][0-1]{9,16}|[$][0]*[1-9A-F]{3,4}|[@][4][0-7][0-7]|[@][0-7][0-7][0-7][0-7][0-7]|[@][0-1][0-7][0-7][0-7][0-7][0-7]|2[5][6-9]|2[6-9]\d|[3-9]\d\d|[0-9]\d\d\d|[0-5]\d\d\d\d|[0-6][0-4][0-9][0-9][0-9]|[0-6][0-5][0-5][0-3][0-5]|[\w_]+)(')")
+    Indexado5bits=(r'([-]\d?|[-]1[0-5]?|[\s]\d?|1[0-6]?)([,])(?i)(X(?![+-])(?![]])|Y(?![+-])(?![]])|SP(?![+-])(?![]])|PC(?![+-])(?![]]))')
+    Indexado9bits=(r'(?i)([-]1[7-9]|[-][2-9]\d|[-]1[0-9]\d|[-]2[0-4][0-9]|[-]2[0-5][0-6]|[\s]1[6-9]|[\s][2-9]\d|[\s]2[0-4][0-9]|[\s]2[0-5][0-5])([,])(X(?![+-])(?![]])|Y(?![+-])(?![]])|SP(?![+-])(?![]])|PC(?![+-])(?![]]))')
+    Indexado16bits=(r'(?i)(2[5][6-9]|[3-9]\d\d|[0-9]\d\d\d|[0-5]\d\d\d\d|[0-6][0-4][0-9][0-9][0-9]|[0-6][0-5][0-5][0-3][0-5])([,])(X(?![+-])(?![]])|Y(?![+-])(?![]])|SP(?![+-])(?![]])|PC(?![+-])(?![]]))')
+    IndexadoIndirecto16bits=(r"\[(\d\d?\d?\d?|[0-5][0-9][0-9][0-9][0-9]|[6][0-4][0-9][0-9][0-9]|[0-6][0-5][0-5][0-3][0-5])(,)(?i)(PC|Y|X|SP)\]")
+    AutoPrePostDecrementoIncremento=(r"[\s][1-8](,)(?i)([+|-](X|Y|SP)|(X|Y|SP)[+|-])")
+    IndexadoAcum= (r"(A|B|D)(,)(?i)(X(?![]])|Y(?![]])|SP(?![]])|PC(?![]]))")##No jalo
+    IndexadoAcumIndirecto=(r"\[(?i)([D])(,)(?i)(PC|Y|X|SP)\]")
+    Relativo8bits=(r"[\s]([\w_]){1,8}(')")
+    Relativo16bits=(r"[\s]([\w_]){9,16}(')")
+    Inmediato8bits= (r"[\s][#]([%][0-1]{1,8}|[$][0-9A-F]{1,2}|[@][0-3][0-7]?[0-7]?|\d|\d\d|1[0-9][0-9]|2[0-4][0-9]|2[5][0-5])(')")
+    Inmediato16bits= (r"[\s][#]([%][0-1]{9,16}|[$][0]*[1-9A-F]{3,4}|[@][4][0-7][0-7]|[@][0-7][0-7][0-7][0-7][0-7]|[@][0-1][0-7][0-7][0-7][0-7][0-7]|2[5][6-9]|2[6-9]\d|[3-9]\d\d|[0-9]\d\d\d|[0-5]\d\d\d\d|[0-6][0-4][0-9][0-9][0-9]|[0-6][0-5][0-5][0-3][0-5])(')")
+    
+    
+    OPERAND= re.search(EsOperando, LineaAnalizada)
+    if OPERAND is None:
+         return None   
+    if OPERAND:
+        Indice=LineaAnalizada.index(OPERAND.group())
+    if Indice > 0:
+        DIRECTOS = re.search(Directo, LineaAnalizada[Indice::], re.MULTILINE)
+        EXT = re.search(Extendido, LineaAnalizada[Indice::], re.MULTILINE)
+        IDX5BITS=  re.search(Indexado5bits, LineaAnalizada[Indice::],re.MULTILINE)
+        IDX9BITS=  re.search(Indexado9bits, LineaAnalizada[Indice::], re.MULTILINE)
+        IDX16BITS=  re.search(Indexado16bits, LineaAnalizada[Indice::], re.MULTILINE)
+        IDXIND16BITS=  re.search(IndexadoIndirecto16bits, LineaAnalizada[Indice::], re.MULTILINE)
+        APPDI=  re.search(AutoPrePostDecrementoIncremento, LineaAnalizada[Indice::], re.MULTILINE)
+        IDXACUM= re.search(IndexadoAcum, LineaAnalizada[Indice::], re.MULTILINE)
+        IDXACUMIND=  re.search(IndexadoAcumIndirecto, LineaAnalizada[Indice::], re.MULTILINE)
+        REL8= re.search(Relativo8bits, LineaAnalizada[Indice::], re.MULTILINE)
+        REL16= re.search(Relativo16bits, LineaAnalizada[Indice::], re.MULTILINE)
+        IMM8= re.search(Inmediato8bits, LineaAnalizada[Indice::], re.MULTILINE)
+        IMM16= re.search(Inmediato16bits, LineaAnalizada[Indice::], re.MULTILINE)
+
+        if DIRECTOS:
+            resultado = DIRECTOS.group().replace("'", "")
+            return resultado, "Directo, 2 bytes"
+            
+        if EXT and rel != 'x':
+            resultado = EXT.group().replace("'", "")
+            return resultado, "Extendido, 3 bytes"
+            
+        if  IDX5BITS:
+            resultado = IDX5BITS.group()
+            return resultado, "Indexado de 5 bits, (IDX), 2 bytes"
+            
+        if  IDX9BITS:
+            resultado = IDX9BITS.group()
+            return resultado, "Indexado de 9 bits, (IDX1), 3 bytes"
+            
+        if  IDX16BITS:
+            resultado = IDX16BITS.group()
+            return resultado, "Indexado de 16 bits, (IDX2), 4 bytes"
+            
+        if IDXIND16BITS:
+            resultado = IDXIND16BITS.group()
+            return resultado, "Indexado Indirecto de 16 bits, ([IDX2]), 4 bytes"
+            
+        if  APPDI:
+            resultado = APPDI.group()
+            return resultado, "Auto Pre/Post Decremento/Incremento, (IDX), 2 bytes"
+            
+        if  IDXACUM:
+            resultado = IDXACUM.group()
+            return resultado, "Indexado de acumulador, (IDX), 2 bytes"
+            
+        if IDXACUMIND:
+            resultado = IDXACUMIND.group()
+            return resultado, "Indexado de acumulador indirecto, ([D,IDX]), 2 bytes"
+            
+        if REL8 and rel == 'x':
+            resultado = REL8.group().replace("'", "")
+            return resultado, "Relativo de 8 bits, (REL), 2 bytes"
+            
+        if REL16 and rel == 'x':
+            resultado = REL16.group().replace("'", "")
+            return resultado, "Relativo de 16 bits, (REL), 4 bytes"
+
+        if IMM8 and inm == 'y':
+            resultado = IMM8.group().replace("'", "")
+            return resultado, "Inmediato de 8 bits, 2 bytes"
+
+        if IMM16 and inm == 'y':
+            resultado = IMM16.group().replace("'", "")
+            return resultado, "Inmediato de 16 bits, 2 bytes"
+
+        if OPERAND:
+           resultado= "Inherente 1 byte" 
+           return resultado     
         
 
-    match= re.search(patronRelativo8_16, LineaAnalizada, re.MULTILINE | re.IGNORECASE)
-    if match is None:
-        return None
-    OPERANDO= match.group()
-    if OPERANDO is not None:
-        print("OPERANDO= " + OPERANDO)
-            
+def Relativo(DataFrame):
 
-    match= re.search(patronIndexadoAcumIndirecto, LineaAnalizada, re.MULTILINE | re.IGNORECASE)
-    if match is None:
-        return None
-    OPERANDO= match.group()
-    if OPERANDO is not None:
-        print("OPERANDO= " + OPERANDO)
-              
+    datos_Tabop= pd.read_excel(ruta_Archivo, sheet_name="Hoja1", header=3)
+    DataFrame= pd.DataFrame(datos_Tabop)
+    DataFrameFiltrado=DataFrame[DataFrame['CODOP'].isin(lista)] 
+
+    relval=DataFrameFiltrado['Addr. Mode'].str.contains('REL').sum()
+
+    if  relval > 0:
+        return "x"
 
 
-  
+def Inmediato(Dataframe):
+
+    datos_Tabop= pd.read_excel(ruta_Archivo, sheet_name="Hoja1", header=3)
+    DataFrame= pd.DataFrame(datos_Tabop)
+    DataFrameFiltrado=DataFrame[DataFrame['CODOP'].isin(lista)] 
     
+    inmeval=DataFrameFiltrado['Addr. Mode'].str.contains('Inmediato').sum()
+    
+    if  inmeval > 0:
+        return "y"        
         
     #Los CODOP del txt en el tabot y muestra la informacion
 def buscar_enTabop(DataFrame, lista):
@@ -128,26 +211,6 @@ def llevaOperando(Dataframe, lista):
 
 
 
-def analizadorOperando(OPERANDO):
-    patronIndexadoAcumIndirecto= r"\[([dD])(,)(PC|Y|X|SP)\]"
-    patronIndexadoAcum= r"(A|B|D)(,)(X|Y|SP|PC)"
-    patronAutoPrePostDecrementoIncremento= r"[1-8](,)[+|-]?(X|Y|SP)[+|-]?"
-    patronIndirecto16bits= r"\[([0-6]?[0-5]?[0-5]?[0-9]?[0-9])?(,)(X|Y|SP)\]"
-    patronIndexado5bits= r"?i)^([-]\d?|[-]1[0-5]?|\d?|1[0-6]?)([,])(X|Y|SP|PC)$"
-
-
-    match= re.search(patronIndexadoAcumIndirecto, OPERANDO, re.MULTILINE | re.IGNORECASE)
-    if match is None:
-            return None
-    resultado= match.group()
-    return resultado
-
-
-
-
-
-
-
 #Importamos librerias y declaramos variables necesarias
 import re
 import sys
@@ -175,17 +238,18 @@ for i in range(0, len(lineas)):
     lista.append(sin_Espacios)              #Metemos en la lista
     t_COMENTARIO(lineas[i])
     t_ETIQUETA(lineas[i])
-    print(Fore.YELLOW + "CODOP= " + t_CODOP(lineas[i]) ) 
+    print( "CODOP= " + t_CODOP(lineas[i]) ) 
     #buscar_enTabop(Dataframe,lista)
-    print(" ")
-    
-    t_OPERANDO(lineas[i])
-    #if llevaOperando(Dataframe , lista) and t_OPERANDO(lineas[i])== "null" :
-    #    print("Error, Debe llevar operando")
+    rel=Relativo(Dataframe)
+    inme=Inmediato(Dataframe)
+    print("OPERANDO= " + str(t_OPERANDO(lineas[i], rel, inme)))
+    if llevaOperando(Dataframe , lista) and t_OPERANDO(lineas[i], rel , inme) is None:
+        print(Fore.RED + "Error, Debe llevar operando")
+        init(autoreset=True)
 
-    #if llevaOperando(Dataframe , lista) is False and t_OPERANDO(lineas[i]) != "null" :
-     #   print("Error, No debe llevar operando")
-
+    if llevaOperando(Dataframe , lista) is False and t_OPERANDO(lineas[i], rel, inme) is not None :
+        print(Fore.RED + "Error, No debe llevar operando")
+        init(autoreset=True)
     
 
     lista=[None]                           #Vaciamos la lista para mayor limpieza
