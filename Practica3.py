@@ -1,5 +1,5 @@
 from re import match
-from pandas.io.formats.style import no_mpl_message
+
 
 ETIQUETA: None                                                           
 CODOP: None
@@ -262,11 +262,11 @@ for i in range(0, len(lineas)):
     #Identifica si debe lleva operando o no
     if llevaOperando(Dataframe , lista) and t_OPERANDO(lineas[i], rel , inme, inh) is None:
         print(Fore.RED + "Error, Debe llevar operando")
-        init(autoreset=True)
+    init(autoreset=True)
 
     if llevaOperando(Dataframe , lista) is False and t_OPERANDO(lineas[i], rel, inme, inh)is not None and t_OPERANDO(lineas[i], rel, inme, inh) != 'Inherente 1 byte':
         print(Fore.RED + "Error, No debe llevar operando")
-        init(autoreset=True)
+    init(autoreset=True)
         
     
 
