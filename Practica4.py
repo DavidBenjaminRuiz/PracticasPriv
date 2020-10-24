@@ -4,6 +4,8 @@ from re import match
 ETIQUETA: None                                                           
 CODOP: None
 OPERANDO: None
+resultado= None
+
 
 def t_COMENTARIO(t):     #Funcion que identifica comentarios
     LineaAnalizada= str(t)
@@ -28,13 +30,15 @@ def t_ETIQUETA(t):      #Funcion que identifica etiqueta
     Tamaño=ETIQUETA.group().strip()
     if Indice == 2 and LineaAnalizada[Indice].isalpha():
         if len(Tamaño)<=8:
-            print("ETIQUETA = "+ ETIQUETA.group())
+            etq= ETIQUETA.group()
+            return etq
              
         else:
-            print("ETIQUETA = Error, longitud invalida")
+            return "Error, longitud invalida"
               
     else:
-        print("ETIQUETA= null")
+        etq= None
+        return etq
 
 
 def t_CODOP(t):     #Funcion que identifica el CODOP
@@ -80,7 +84,7 @@ def t_OPERANDO(t, rel, inm,inh):
     Inmediato8bits= (r"[\s][#]([%][0-1]{1,8}|[$][0-9A-F]{1,2}|[@][0-3][0-7]?[0-7]?|\d|\d\d|1[0-9][0-9]|2[0-4][0-9]|2[5][0-5])(')")
     Inmediato16bits= (r"[\s][#]([%][0-1]{9,16}|[$][0]*[1-9A-F]{3,4}|[@][4][0-7][0-7]|[@][0-7][0-7][0-7][0-7][0-7]|[@][0-1][0-7][0-7][0-7][0-7][0-7]|2[5][6-9]|2[6-9]\d|[3-9]\d\d|[0-9]\d\d\d|[0-5]\d\d\d\d|[0-6][0-4][0-9][0-9][0-9]|[0-6][0-5][0-5][0-3][0-5])(')")
     Inherente= (r"[\s](')(,)")
-    
+    DirectivaFCC= (r"(\".*\")")
     #BUSCA SI CONTIENE OPERANDO EN LA LIENA
     OPERAND= re.search(EsOperando, LineaAnalizada)
     INH = re.search(Inherente, LineaAnalizada)
@@ -104,63 +108,67 @@ def t_OPERANDO(t, rel, inm,inh):
         REL16= re.search(Relativo16bits, LineaAnalizada[Indice::])
         IMM8= re.search(Inmediato8bits, LineaAnalizada[Indice::])
         IMM16= re.search(Inmediato16bits, LineaAnalizada[Indice::])
-
+        FCC = re.search(DirectivaFCC, LineaAnalizada[Indice::])
         #IDENTIFICA A QUE TIPO PERTENECE EL OPERANDO Y DEVUELVE EL RESULTADO
         if DIRECTOS:
             resultado = DIRECTOS.group().replace("'", "")
-            return resultado, "Directo, 2 bytes"
+            return resultado, "Directo, Dos bytes"
             
         if EXT and rel != 'x':
             resultado = EXT.group().replace("'", "")
-            return resultado, "Extendido, 3 bytes"
+            return resultado, "Extendido, Tres bytes"
             
         if  IDX5BITS:
             resultado = IDX5BITS.group()
-            return resultado, "Indexado de 5 bits, (IDX), 2 bytes"
+            return resultado, "Indexado de Cinco bits, (IDX), Dos bytes"
             
         if  IDX9BITS:
             resultado = IDX9BITS.group()
-            return resultado, "Indexado de 9 bits, (IDX1), 3 bytes"
+            return resultado, "Indexado de Nueve bits, (IDX1), Tres bytes"
             
         if  IDX16BITS:
             resultado = IDX16BITS.group()
-            return resultado, "Indexado de 16 bits, (IDX2), 4 bytes"
+            return resultado, "Indexado de Dieciseis bits, (IDX2), Cuatro bytes"
             
         if IDXIND16BITS:
             resultado = IDXIND16BITS.group()
-            return resultado, "Indexado Indirecto de 16 bits, ([IDX2]), 4 bytes"
+            return resultado, "Indexado Indirecto de 16 bits, ([IDX2]), Cuatro bytes"
             
         if  APPDI:
             resultado = APPDI.group()
-            return resultado, "Auto Pre/Post Decremento/Incremento, (IDX), 2 bytes"
+            return resultado, "Auto Pre/Post Decremento/Incremento, (IDX), Dos bytes"
             
         if  IDXACUM:
             resultado = IDXACUM.group()
-            return resultado, "Indexado de acumulador, (IDX), 2 bytes"
+            return resultado, "Indexado de acumulador, (IDX), Dos bytes"
             
         if IDXACUMIND:
             resultado = IDXACUMIND.group()
-            return resultado, "Indexado de acumulador indirecto, ([D,IDX]), 2 bytes"
+            return resultado, "Indexado de acumulador indirecto, ([D,IDX]), Dos bytes"
             
         if REL8 and rel == 'x':
             resultado = REL8.group().replace("'", "")
-            return resultado, "Relativo de 8 bits, (REL), 2 bytes"
+            return resultado, "Relativo de Ocho bits, (REL), Dos bytes"
             
         if REL16 and rel == 'x':
             resultado = REL16.group().replace("'", "")
-            return resultado, "Relativo de 16 bits, (REL), 4 bytes"
+            return resultado, "Relativo de 16 bits, (REL), Cuatro bytes"
 
         if IMM8 and inm == 'y':
             resultado = IMM8.group().replace("'", "")
-            return resultado, "Inmediato de 8 bits, 2 bytes"
+            return resultado, "Inmediato de Ocho bits, Dos bytes"
 
         if IMM16 and inm == 'y':
             resultado = IMM16.group().replace("'", "")
-            return resultado, "Inmediato de 16 bits, 2 bytes"
+            return resultado, "Inmediato de 16 bits, Dos bytes"
 
         if INH and inh == 'z':
-           resultado= "Inherente 1 byte" 
-           return resultado     
+           resultado= "Inherente Un byte" 
+           return resultado  
+
+        if FCC:
+            resultado= FCC.group()
+            return resultado       
         
 #FUNCION QUE NOS PERMITE SABER QUE TIPO DE RELATIVO ES
 def Relativo(DataFrame):
@@ -224,6 +232,48 @@ def llevaOperando(Dataframe, lista):
         contiene=True
         return contiene
 
+def valorDelORG(t):
+    LineaAnalizada= str(t)
+    patronBuscarValor= r"ORG\s*(.{1,4})"
+    lineaFil= re.search(patronBuscarValor, LineaAnalizada)
+    if lineaFil is None:
+         return None   
+    if lineaFil:
+        resultado= lineaFil.group()
+        resultado1= resultado.split(" ", 1)
+        return resultado1[1] 
+
+def escribirArchivoTemporal(CONTLOC,ETIQUETA,CODOP,result):
+    archivoTmp.write("CONTLOC" +  "\t"+ CONTLOC + "\t" + str(ETIQUETA) + "\t" + str(CODOP) + "\t" + str(result) + "\n")
+
+def analizaDirectiva(codop, result,operando):
+    #Directivas de constantes
+    if codop.strip()== "DB" or codop.strip()== "DC.B" or codop.strip()== "FCB":
+        return 1
+       
+    if codop.strip()== "DW" or codop.strip()== " DC.W" or codop.strip()== "FDB":
+        return 2
+        
+    if codop.strip()== "FCC":
+        return len(operando)           
+    
+    if codop.strip()== "DS" or codop.strip()== "DS.B" or codop.strip()== "RMB":
+        return int(result)
+
+    if codop.strip()== "DS.W" or codop.strip()== "RMW":
+        i=int(result)
+        return i*2
+    else:
+        return 0
+
+def escribeTABSIM(CONTLOC, ETIQUETA):
+    TABSIM.write("CONTLOC (ETIQUETA RELATIVA) " + "\t" + str(ETIQUETA) + "\t" + str(CONTLOC) + "\n")
+
+def limpiaORG(DIR_INIC):
+    regexNum= r"[^0-9]"
+    subst = ""
+    result = re.sub(regexNum, subst, DIR_INIC, 0, re.MULTILINE)
+    return int(result)     
 
 #Importamos librerias y declaramos variables necesarias
 import re
@@ -246,12 +296,27 @@ with open('P2ASM.txt', 'r') as f:
 
 #Lista para guardar los CODOP
 lista=[] 
-#Lee el archivo y lo analiza y muestra los resultados
+#Creacion de archivos auxiliares
+archivoTmp= open('P4tmp.txt','r+')
+TABSIM= open('TABSIM.txt','r+')
+
+#Obtiene el valor del ORG
+for i in range(0, len(lineas)):
+    DIR_INIC=valorDelORG(lineas[i])
+    if DIR_INIC is not None:
+        break
+
+print(DIR_INIC)    
+CONTLOC= int(limpiaORG(DIR_INIC))
+print(CONTLOC)
+archivoTmp.write("DIR_INIC" + str(DIR_INIC) + "\n")
+
+#Lectura del archivo principal
 for i in range(0, len(lineas)):
     sin_Espacios=t_CODOP(lineas[i]).strip() #Quitamos los espacios al CODOP para comparar mas facil
     lista.append(sin_Espacios)              #Metemos en la lista
     t_COMENTARIO(lineas[i])
-    t_ETIQUETA(lineas[i])
+    print("ETIQUETA= " + str(t_ETIQUETA(lineas[i])))
     print( "CODOP= " + t_CODOP(lineas[i]) ) 
     #buscar_enTabop(Dataframe,lista)
     rel=Relativo(Dataframe)
@@ -267,9 +332,45 @@ for i in range(0, len(lineas)):
     if llevaOperando(Dataframe , lista) is False and t_OPERANDO(lineas[i], rel, inme, inh)is not None and t_OPERANDO(lineas[i], rel, inme, inh) != 'Inherente 1 byte':
         print(Fore.RED + "Error, No debe llevar operando")
     init(autoreset=True)
-        
+
+    #Saca el valor de las variables principales
+    etiqueta= str(t_ETIQUETA(lineas[i]))
+    codop= str(t_CODOP(lineas[i]))
+    operando= str(t_OPERANDO(lineas[i], rel, inme,inh))
+
+    print(operando)
+    #Obtiene el valor del operando eliminando lo inesario
+    regexNum= r"[^0-9]"
+    subst = ""
+    result = re.sub(regexNum, subst, operando, 0, re.MULTILINE)
+
+    regexSimbolo = r"([^|#|@|%])"
+    result1= re.sub(regexSimbolo, subst, operando, 0, re.MULTILINE)
+    
+    print( CONTLOC)
+    #Hace la suma del CONTLOC segun corresponda
+    aumentoCONTLOC=int(analizaDirectiva(codop, result,operando))
+    CONTLOC= int(CONTLOC) + int(aumentoCONTLOC)
+    con=hex(CONTLOC).lstrip("0x").upper().zfill(4)
+   
+   #Escribe en el archivo temporal
+    if codop.strip() == "FCC":
+        escribirArchivoTemporal(con, etiqueta,codop,operando)
+    else:    
+        escribirArchivoTemporal(con, etiqueta,codop,result)
+
+    
+    if t_ETIQUETA(lineas[i]) is not None:
+        escribeTABSIM(con, etiqueta)
+    else:
+        pass    
     
 
-    lista=[None]                           #Vaciamos la lista para mayor limpieza
+    lista=[None]                          #Vaciamos la lista para mayor limpieza
     print(" \n ")
 
+    
+
+for linea in lineas:
+    print(linea)
+    

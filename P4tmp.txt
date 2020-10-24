@@ -1,0 +1,12 @@
+DIR_INIC    $12 
+CONTLOC	002D	ET1          EQU     33
+CONTLOC	0043	ET2          EQU     22
+CONTLOC	0043	None ORG     None
+CONTLOC	0047	ET3          EQU     4
+CONTLOC	004A	ET5          EQU     3
+CONTLOC	004A	None SWI(' SWI', 'Extendido, Tres bytes')
+CONTLOC	0070	ET6          ADCA    38
+CONTLOC	00A0	ET7          ADCA    48
+CONTLOC	00A2	ET8          EQU     2
+CONTLOC	00AE	None FCC     "Hola Mundo"
+CONTLOC	00AE	None END                 None
