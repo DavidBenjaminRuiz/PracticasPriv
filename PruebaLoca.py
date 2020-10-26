@@ -121,19 +121,19 @@ def t_OPERANDO(t, rel, inm,inh):
             
         if  IDX5BITS:
             resultado = IDX5BITS.group()
-            return resultado, "Indexado de 5 bits, (IDX), Dos bytes"
+            return resultado, "Indexado de Cinco bits, (IDX), Dos bytes"
             
         if  IDX9BITS:
             resultado = IDX9BITS.group()
-            return resultado, "Indexado de 9 bits, (IDX1), Tres bytes"
+            return resultado, "Indexado de Nueve bits, (IDX1), Tres bytes"
             
         if  IDX16BITS:
             resultado = IDX16BITS.group()
-            return resultado, "Indexado de 16 bits, (IDX2), Cuatro bytes"
+            return resultado, "Indexado de Dieciseis bits, (IDX2), Cuatro bytes"
             
         if IDXIND16BITS:
             resultado = IDXIND16BITS.group()
-            return resultado, "Indexado Indirecto de 16 bits, ([IDX2]), Cuatro bytes"
+            return resultado, "Indexado Indirecto de Dieciseis bits, ([IDX2]), Cuatro bytes"
             
         if  APPDI:
             resultado = APPDI.group()
@@ -149,22 +149,22 @@ def t_OPERANDO(t, rel, inm,inh):
             
         if REL8 and rel == 'x':
             resultado = REL8.group().replace("'", "")
-            return resultado, "Relativo de 8 bits, (REL), Dos bytes"
+            return resultado, "Relativo de Ocho bits, (REL), Dos bytes"
             
         if REL16 and rel == 'x':
             resultado = REL16.group().replace("'", "")
-            return resultado, "Relativo de 16 bits, (REL), Cuatro bytes"
+            return resultado, "Relativo de Dieciseis bits, (REL), Cuatro bytes"
 
         if IMM8 and inm == 'y':
             resultado = IMM8.group().replace("'", "")
-            return resultado, "Inmediato de 8 bits, Dos bytes"
+            return resultado, "Inmediato de Ocho bits, Dos bytes"
 
         if IMM16 and inm == 'y':
             resultado = IMM16.group().replace("'", "")
-            return resultado, "Inmediato de 16 bits, Dos bytes"
+            return resultado, "Inmediato de Dieciseis bits, Dos bytes"
 
         if INH and inh == 'z':
-           resultado= "Inherente Uno byte" 
+           resultado= "Inherente, Un byte" 
            return resultado  
 
         if FCC:
@@ -244,8 +244,11 @@ def valorDelORG(t):
         resultado1= resultado.split(" ", 1)
         return resultado1[1] 
 
-def escribirArchivoTemporal(CONTLOC,ETIQUETA,CODOP,result):
-    archivoTmp.write("CONTLOC" +  "\t"+ CONTLOC + "\t" + str(ETIQUETA) + str(CODOP) + str(result) + "\n")
+def escribirArchivoTemporal(CONTLOC,ETIQUETA,CODOP,result,VALOR_EQU):
+    if codop.strip() != "EQU":
+        archivoTmp.write("CONTLOC" +  "\t" + CONTLOC + "\t" + str(ETIQUETA) + "\t" + str(CODOP) +  "\t" +  str(result) + "\n")
+    else:
+        archivoTmp.write("VALOR EQU" + "\t" + str(VALOR_EQU) + "\t" + str(ETIQUETA) + "\t" + str(CODOP) + "\t"+ str(result) + "\n")
 
 def analizaDirectiva(codop, result,operando):
     #Directivas de constantes
@@ -284,14 +287,14 @@ def validarDirectivas(aumentocontloc, con, etiqueta, codop, result, operando):
     PQ= re.search(pequeño, operando)
     GD= re.search(grande, operando)
     
-    if codop.strip() == "EQU" and etiqueta != "null" and etiqueta != 'None' and GD:
+    if codop.strip() == "EQU" and etiqueta != "null" and etiqueta is not 'None' and GD:
         print('enviarlinea')
     elif codop.strip() == "EQU":
         print(Fore.RED + 'ERROR EQU TIENE QUE TENER UNA ETIQUETA Y UN OPERANDO')
     init(autoreset=True)    
 
     if aumentoCONTLOC > 0 and PQ or aumentoCONTLOC > 0 and GD:
-        escribirArchivoTemporal(con, etiqueta,codop,result)
+        escribirArchivoTemporal(con, etiqueta,codop,result, VALOR_EQU)
     elif (codop.strip()== "DB" or codop.strip()== "DC.B" or codop.strip()== "FCB"  or codop.strip()== "DW" or codop.strip()== "DC.W" or codop.strip()== "FDB" 
     or codop.strip()== "DS" or codop.strip()== "DS.B" or codop.strip()== "RMB" or codop.strip()== "DS.W" or codop.strip()== "RMW"):
         escribirArchivoTemporal(con, etiqueta,codop, 0)
@@ -300,8 +303,8 @@ def validarDirectivas(aumentocontloc, con, etiqueta, codop, result, operando):
     elif result != "":
         escribirArchivoTemporal(con, etiqueta,codop, result)
     else:
-        escribirArchivoTemporal(con, etiqueta,codop,operando)
-    if codop.strip() == "FCC" and operando == 'None':
+        escribirArchivoTemporal(con, etiqueta,codop,operando, VALOR_EQU)
+    if codop.strip() == "FCC" and operando is None:
         print(Fore.RED + "Error el operando es inválido")
     init(autoreset=True) 
 
@@ -311,9 +314,13 @@ def limpiaORG(DIR_INIC):
     result = re.sub(regexNum, subst, DIR_INIC, 0, re.MULTILINE)
     return int(result) 
 
-def escribeTABSIM(CONTLOC, ETIQUETA):
-    TABSIM.write("CONTLOC (ETIQUETA RELATIVA) " + "\t" + str(ETIQUETA) + "\t" + str(CONTLOC) + "\n")
+def escribeTABSIM(CONTLOC, ETIQUETA, VALOR_EQU, CODOP):
+    if codop.strip() != "EQU":
+        TABSIM.write("CONTLOC (ETIQUETA RELATIVA) " + "\t" + str(ETIQUETA) + "\t" + str(CONTLOC) + "\n")
+    else :
+        TABSIM.write("EQU (ETIQUETA ABSOLUTA) " + "\t" + str(ETIQUETA) + "\t" + str(VALOR_EQU) + "\n")
 
+############################################################# MAIN ##########################################################################     
 
 #Importamos librerias y declaramos variables necesarias
 import re
@@ -345,11 +352,11 @@ for i in range(0, len(lineas)):
     if DIR_INIC is not None:
         break
 
-print(DIR_INIC)    
-CONTLOC= int(limpiaORG(DIR_INIC))
-print(CONTLOC)
+   
 
-archivoTmp.write("DIR_INIC" + str(DIR_INIC) + "\n")
+VALOR_EQU= 0
+CONTLOC= 0
+
 for i in range(0, len(lineas)):
     sin_Espacios=t_CODOP(lineas[i]).strip() #Quitamos los espacios al CODOP para comparar mas facil
     lista.append(sin_Espacios)              #Metemos en la lista
@@ -359,6 +366,7 @@ for i in range(0, len(lineas)):
     #buscar_enTabop(Dataframe,lista)
     rel=Relativo(Dataframe)
     inme=Inmediato(Dataframe)
+     
     inh=Inherente(Dataframe)
     print("OPERANDO= " + str(t_OPERANDO(lineas[i], rel, inme,inh)))
 
@@ -371,29 +379,43 @@ for i in range(0, len(lineas)):
         print(Fore.RED + "Error, No debe llevar operando")
     init(autoreset=True)
 
-    etiqueta= str(t_ETIQUETA(lineas[i]))
-    codop= str(t_CODOP(lineas[i]))
-    operando= str(t_OPERANDO(lineas[i], rel, inme,inh))
+    etiqueta= str(t_ETIQUETA(lineas[i])).strip()
+    codop= str(t_CODOP(lineas[i])).strip()
+    operando= str(t_OPERANDO(lineas[i], rel, inme,inh)).strip()
 
-    regex= r"[^0-9]"
+    regex= r"[^0-9]"    
     subst = ""
-    result = re.sub(regex, subst, operando, 0, re.MULTILINE)
+    result = re.sub(regex, subst, operando, 0, re.MULTILINE).strip()
+    print(result)
+    if result != "":
+        pas= int(result)
+        VALOR_EQU= hex(pas).lstrip('0x').zfill(4).upper()
 
-    
+    if codop.strip() == "ORG":
+        archivoTmp.write("DIR_INIC" + DIR_INIC + str(etiqueta) + str(codop) + str(operando) + "\n" )
+        CONTLOC= int(limpiaORG(DIR_INIC))
+    else:
+        pass    
+            
+
+    validarDirectivas(aumentoCONTLOC, con, etiqueta, codop, result, operando)
+
     aumentoCONTLOC=int(analizaDirectiva(codop, result,operando))
     CONTLOC= int(CONTLOC) + int(aumentoCONTLOC)
     con=hex(CONTLOC).lstrip('0x').zfill(4).upper()
+
+  
+
     
-    validarDirectivas(aumentoCONTLOC, con, etiqueta, codop, result, operando)
     
     if t_ETIQUETA(lineas[i]) is not None:
-            escribeTABSIM(con, etiqueta)
+            escribeTABSIM(con, etiqueta, VALOR_EQU, codop)
     else:
         pass  
 
     lista=[None]                          #Vaciamos la lista para mayor limpieza
-    print(" \n ")
-
+    print(" \n ")  
+ 
 
 for linea in lineas:
     print(linea)
