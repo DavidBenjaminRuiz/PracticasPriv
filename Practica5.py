@@ -335,7 +335,17 @@ def escribeTABSIM(CONTLOC, ETIQUETA, VALOR_EQU, CODOP):
 
 def codigoMaquinaInherente(valor, etiqueta, codop, operando, codigoMaquina):
     print(valor, etiqueta, codop, operando, codigoMaquina )
+
+def codigoMaquinaDirecto(valor, etiqueta, codop, operando, codigoMaquina):
     
+    if operando != '':
+        op= int(operando)
+        operandoHex= hex(op).replace("0x","").upper()
+        operandoUnido= str(codigoMaquina)+str(operandoHex)
+        print(valor, etiqueta, codop, operando, operandoUnido.zfill(4).replace("[","").replace("]","").replace("'",""))
+    else: 
+        pass    
+
 
 def valorCodigoMaquina(Dataframe, lista, modoDir):
     datos_Tabop= pd.read_excel(ruta_Archivo, sheet_name="Hoja1", header=3)
@@ -345,11 +355,9 @@ def valorCodigoMaquina(Dataframe, lista, modoDir):
     valor= (DataFrameFiltrado['Código Máquina Calculado'].all()) and (DataFrameFiltrado["Addr. Mode"]== modoDir)
     valorCodigoMaquina= DataFrameFiltrado["Código Máquina Calculado"].loc[valor]
     return str(valorCodigoMaquina.values)
-         
 
 
-   
-    
+
 ############################################################# MAIN ##########################################################################     
 
 #Importamos librerias y declaramos variables necesarias
@@ -438,13 +446,19 @@ for i in range(0, len(lineas)):
         modoDir= "Inmediato"      
         
     #Obtiene el valor del codigo maquina
-    if codop.strip() != "EQU":
+    if codop.strip() != "EQU" and modoDir== "Inherente":
         valorCM= valorCodigoMaquina(Dataframe, lista, modoDir)
         valor= 0
         codigoMaquinaInherente(str(valor).zfill(4), etiqueta, codop, operandoNumerico, valorCM)
-
-    
-
+    else:
+        pass
+            
+    if codop.strip() != "EQU" and modoDir == "Directo": 
+        valorCM= valorCodigoMaquina(Dataframe, lista, modoDir)
+        valor= 0   
+        codigoMaquinaDirecto(str(valor).zfill(4), etiqueta, codop,  operandoNumerico, valorCM  )
+    else:
+        pass
     #Pasa el valor del EQU a hexadecimal
     if operandoNumerico != "":
         auxEQU= int(operandoNumerico)

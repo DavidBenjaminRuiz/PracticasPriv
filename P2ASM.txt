@@ -6,6 +6,7 @@ ET5         EQU     3
             SWI 
 ET6         ADCA    #3
 ET7         COMA 
-            CBA 
+            LDAA    $55
+            LDX     $20
 ET8         EQU     2
             END                 
