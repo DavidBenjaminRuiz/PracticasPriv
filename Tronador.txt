@@ -1,0 +1,13 @@
+        ORG     0
+        STY     0,PC
+        STY     2,PC
+        STY     -2,Y
+        STY     -222,SP
+        STY     222,X
+        STY     2,-Y
+         STY    2,X-
+        STY     2,+SP
+        STY     2,SP+
+        STY     D,PC
+        STY     22222,PC
+        END
