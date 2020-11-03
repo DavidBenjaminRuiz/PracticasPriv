@@ -8,8 +8,6 @@ resultado= None
 sistemaNumerico= " "
 
 
-
-
 def t_COMENTARIO(t):     #Funcion que identifica comentarios
     LineaAnalizada= str(t)
     SiContiene= LineaAnalizada.find(";")
@@ -73,8 +71,8 @@ def t_OPERANDO(t, rel, inm,inh):
     
     #EXPRESIONES REGULARES PARA IDENTIFICAR CADA UNO DE LOS MODOS DE DIRECCIONAMIENTO
     EsOperando= r'[\s]([@]|[%]|[$]|[0-9]|[,]|[-]|[[]|A|B|D|[\w_])'
-    Directo=r"[\s]([%][0-1]{1,8}|[$][0-9A-F]{1,2}|[@][0-7]|[@][0-7][0-7]|[@][0-3][0-7][0-7]|\d|\d\d|1[0-9][0-9]|2[0-4][0-9]|2[5][0-5])(')"
-    Extendido=(r"[\s]([%][0-1]{9,16}|[$][1-9A-F]{3,4}|[@][4-7][0-7][0-7]|[@][0-7][0-7][0-7][0-7]|[@][0-7][0-7][0-7][0-7][0-7]|[@][0-1][0-7][0-7][0-7][0-7][0-7]|2[5][6-9]|2[6-9]\d|[3-9]\d\d|[0-9]\d\d\d|[0-5]\d\d\d\d|[0-6][0-4][0-9][0-9][0-9]|[0-6][0-5][0-5][0-3][0-5]|[a-zA-Z]+[\w])(')")
+    Directo=r"[\s]([%][0-1]{1,8}|[$][0-9A-F]{1,4}|[@][0-7]|[@][0-7][0-7]|[@][0-3][0-7][0-7]|\d|\d\d|1[0-9][0-9]|2[0-4][0-9]|2[5][0-5])(')"
+    Extendido=(r"[\s]([%][0-1]{9,16}|[$][0]*[1-9A-F]{3,4}|[@][4-7][0-7][0-7]|[@][0-7][0-7][0-7][0-7]|[@][0-7][0-7][0-7][0-7][0-7]|[@][0-1][0-7][0-7][0-7][0-7][0-7]|2[5][6-9]|2[6-9]\d|[3-9]\d\d|[0-9]\d\d\d|[0-5]\d\d\d\d|[0-6][0-4][0-9][0-9][0-9]|[0-6][0-5][0-5][0-3][0-5]|[a-zA-Z]+[\w])(')")
     Indexado5bits=(r'([-]\d?|[-]1[0-5]?|[\s]\d?|1[0-6]?)([,])(?i)(X(?![+-])(?![]])|Y(?![+-])(?![]])|SP(?![+-])(?![]])|PC(?![+-])(?![]]))')
     Indexado9bits=(r'(?i)([-]1[7-9]|[-][2-9]\d|[-]1[0-9]\d|[-]2[0-4][0-9]|[-]2[0-5][0-6]|[\s]1[6-9]|[\s][2-9]\d|[\s]2[0-4][0-9]|[\s]2[0-5][0-5])([,])(X(?![+-])(?![]])|Y(?![+-])(?![]])|SP(?![+-])(?![]])|PC(?![+-])(?![]]))')
     Indexado16bits=(r'(?i)(2[5][6-9]|[3-9]\d\d|[0-9]\d\d\d|[0-5]\d\d\d\d|[0-6][0-4][0-9][0-9][0-9]|[0-6][0-5][0-5][0-3][0-5])([,])(X(?![+-])(?![]])|Y(?![+-])(?![]])|SP(?![+-])(?![]])|PC(?![+-])(?![]]))')
@@ -352,7 +350,7 @@ def escribeTABSIM(CONTLOC, ETIQUETA, VALOR_EQU, CODOP):
 
 
 def codigoMaquinaInherente(valor, etiqueta, codop, operando, codigoMaquina):
-    print(valor, etiqueta, codop, operando, codigoMaquina )
+    print(valor, etiqueta, codop, operando, codigoMaquina.replace("[","").replace("]","") )
 
 def codigoMaquinaDirecto(valor, etiqueta, codop, operando, codigoMaquina):
     
@@ -410,17 +408,25 @@ def codigoMaquinaInmediato(valor, etiqueta, codop, operando, codigoMaquina, sist
     if operando != '' and sistemaNumerico.strip()== "$":
         op= int(operando, 16)
         operandoHex= hex(op).replace("0x","").upper()
-        operandoUnido= str(codigoMaquina)+str(operandoHex)
+        operandoUnido= str(codigoMaquina)+str(operandoHex).zfill(4)
+        print(valor, etiqueta, codop, operando, operandoUnido.replace("[","").replace("]","").replace("'",""))
+    else:
+        pass
+    #Decimal
+    dec=r'[0-9]'
+    deci=re.search(dec, operando)
+    if operando != '' and sistemaNumerico.strip() != '%' and sistemaNumerico.strip() != '$' and sistemaNumerico.strip() != '@' and deci:
+        op= int(operando, 10)
+        operandoHex= hex(op).replace("0x","").upper()
+        operandoUnido= str(codigoMaquina)+str(operandoHex).zfill(4)
         print(valor, etiqueta, codop, operando, operandoUnido.replace("[","").replace("]","").replace("'",""))
     else:
         pass
 
-
 def codigoMaquinaExtendido(valor, etiqueta, codop, operando, codigoMaquina, sistemaNumerico, valorEtiquetaF):
         
-        print(operando)
         #Binario
-        if operando.strip() != '' and sistemaNumerico.strip()== "%":
+        if operando != '' and sistemaNumerico.strip()== "%" and valorEtiquetaF == 0:
             op= int(operando, 2)
             operandoHex= hex(op).replace("0x","").upper()
             operandoUnido= str(codigoMaquina)+str(operandoHex).zfill(4)
@@ -428,21 +434,21 @@ def codigoMaquinaExtendido(valor, etiqueta, codop, operando, codigoMaquina, sist
         else:
             pass
         #Octal
-        if operando.strip() != '' and sistemaNumerico.strip()== "@":
+        if operando != '' and sistemaNumerico.strip()== "@" and valorEtiquetaF == 0:
             op= int(operando, 8)
             operandoHex= hex(op).replace("0x","").upper()
             operandoUnido= str(codigoMaquina)+str(operandoHex).zfill(4)
             print(valor, etiqueta, codop, operando, operandoUnido.replace("[","").replace("]","").replace("'",""))
         else:
             pass
-        if operando.strip() != '' and sistemaNumerico.strip()== "$":
+        if operando != '' and sistemaNumerico=='$' and valorEtiquetaF==0:
             op= int(operando, 16)
             operandoHex= hex(op).replace("0x","").upper()
             operandoUnido= str(codigoMaquina)+str(operandoHex).zfill(4)
             print(valor, etiqueta, codop, operando, operandoUnido.replace("[","").replace("]","").replace("'",""))
         else:
             pass
-        if operando.strip() != '' and valorEtiquetaF == 0 and sistemaNumerico.strip().isdigit():
+        if operando != '' and valorEtiquetaF == 0 and sistemaNumerico.strip().isdigit():
             op= int(operando, 10)
             operandoHex= hex(op).replace("0x","").upper()
             operandoUnido= str(codigoMaquina)+str(operandoHex)
@@ -474,6 +480,7 @@ def validarExistenciaEtiqueta( filename,operando):
         for line in read_obj:
             valor= line[-5]+ line[-4] + line[-3] +line[-2]+line[-1]
             if str(valorEtiqueta).strip() in line:
+                
                 return valor.strip()
     return False
 
@@ -522,7 +529,7 @@ for i in range(0, len(lineas)):
     sin_Espacios=t_CODOP(lineas[i]).strip() #Quitamos los espacios al CODOP para comparar mas facil
     lista.append(sin_Espacios)              #Metemos en la lista
     t_COMENTARIO(lineas[i])
-    #print("ETIQUETA= " + str(t_ETIQUETA(lineas[i])))
+    print("ETIQUETA= " + str(t_ETIQUETA(lineas[i])))
     print( "CODOP= " + t_CODOP(lineas[i]) ) 
     #buscar_enTabop(Dataframe,lista)
     rel=Relativo(Dataframe)
@@ -580,10 +587,24 @@ for i in range(0, len(lineas)):
     elif str(t_OPERANDO(lineas[i],rel, inme,inh)).__contains__("Inmediato"):
         modoDir= "Inmediato"      
         
-    #
+    if modoDir =="Extendido" or modoDir == "Directo" or modoDir == "Inmediato":
+        recExt=r"\$[0-9A-F]+[$']"
+        reconocido=re.search(recExt, operando)
+        if reconocido:
+            regex=r"[^0-9A-F]"
+            subst = ""
+            operandoNumerico = re.sub(regex, subst, reconocido.group(), 0, re.MULTILINE).strip()
+            hexa=1
+        else:
+            hexa=0
+
+
     #Pasa el valor del EQU a hexadecimal
-    if operandoNumerico != "":
+    if operandoNumerico != "" and hexa==0:
         auxEQU= int(operandoNumerico)
+        VALOR_EQU= hex(auxEQU).lstrip('0x').zfill(4).upper()
+    if operandoNumerico != "" and hexa ==1:
+        auxEQU=int(operandoNumerico, 16)
         VALOR_EQU= hex(auxEQU).lstrip('0x').zfill(4).upper()
 
     #Detecta el org y incia el contloc
@@ -644,14 +665,16 @@ for i in range(0, len(lineas)):
     
     
     if codop.strip() != "EQU" and modoDir == "Extendido": 
-        valorCM= valorCodigoMaquina(Dataframe, lista, modoDir)   
+        valorCM= valorCodigoMaquina(Dataframe, lista, modoDir)
+        valor= 0   
         filename= "TABSIM.txt"
-        valorEtiquetaF=validarExistenciaEtiqueta(filename, operando)
-        if validarExistenciaEtiqueta(filename,operando):
+        
+        if validarExistenciaEtiqueta(filename,operando) and sistemaNumerico.strip() != '':
+            valorEtiquetaF=validarExistenciaEtiqueta(filename, operando)
             codigoMaquinaExtendido(contlocHEX, etiqueta, codop, operandoNumerico, valorCM, sistemaNumerico, valorEtiquetaF)        
-        elif sistemaNumerico.strip() == '%' or sistemaNumerico.strip() == '$' or sistemaNumerico.strip() == '@' or sistemaNumerico.isdigit():
-            print(sistemaNumerico)
-            codigoMaquinaExtendido(contlocHEX, etiqueta, codop,  operandoNumerico, valorCM , sistemaNumerico, valorEtiquetaF )
+        elif sistemaNumerico.strip() == '%' or sistemaNumerico.strip() == '$' or sistemaNumerico.strip() == '@' or sistemaNumerico.strip().isdigit():
+            print("si")
+            codigoMaquinaExtendido(contlocHEX, etiqueta, codop,  operandoNumerico, valorCM , sistemaNumerico, 0 )
         else:
             print("La etiqueta no se encuentra en el TABSIM, Error")   
     else:
