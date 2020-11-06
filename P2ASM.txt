@@ -1,20 +1,15 @@
 ET1         EQU     33
 VALOR1      EQU     22
 VALOR2      EQU     12
-            ORG     $0        
-ET5         EQU     3
-            CBA  
+            ORG     $0  
             SWI 
-            LDAA    85
-            LDAA    $0055
-            LDAA    @777
-ET6         LDAA    VALOR1
-            LDAA    65535
-            LDAA    VALOR2
-            LDAA    #@422
-            LDAA    $FFFF
-            LDAA    @777
-            LDX     #$1234
-            LDY     #%1100111
-            EQU     2
+            LDAA    ,X
+            LDAA    -16,SP
+            LDAA    255,X
+            LDAA    -18,X
+            STAA    1,-SP
+            STX     2,+SP
+            LDAA    B,X
+            LDAA    D,X
+            LDAA    31483,X
             END               

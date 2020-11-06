@@ -5,7 +5,7 @@
         STY     -222,SP
         STY     222,X
         STY     2,-Y
-         STY    2,X-
+        STY     2,X-
         STY     2,+SP
         STY     2,SP+
         STY     D,PC
