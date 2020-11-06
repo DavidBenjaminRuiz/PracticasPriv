@@ -460,41 +460,40 @@ def codigoMaquinaExtendido(valor, etiqueta, codop, operando, codigoMaquina, sist
             print(valor, etiqueta, codop, operando, operandoUnido.replace("[","").replace("]","").replace("'","") )
         else: 
             pass
-
+#Calcula el codigo maquina de Los Indexados5bits
 def codigoMaquinaIDX5( operando, codigoMaquina):
     
     formula="rr0nnnnn"
     rr= None
-    nnnnn= None
-    
-    if operando != None:
-        ope= operando[0:7].replace("(","").replace("'","")
-    
-        if ope.strip() == ",X,":
-            ope= "0,X"
 
-        num= ope.replace("X","").replace("Y","").replace("SP","").replace("PC","").replace(",","")
-        numB= bin(int(num))
-        numB=numB.replace("0b","").zfill(5)
-        formula= formula.replace("nnnnn",numB)
+    if operando != None:
+        Operando= operando[0:7].replace("(","").replace("'","")
+    
+        if Operando.strip() == ",X,":
+            Operando= "0,X"
+
+        numDecimal= Operando.replace("X","").replace("Y","").replace("SP","").replace("PC","").replace(",","")
+        aBinarioC2 = lambda x, count=8: "".join(map(lambda y:str((x>>y)&1), range(count-1, -1, -1)))
+        numeroBinario = aBinarioC2(int(numDecimal,10), 5)
+        formula= formula.replace("nnnnn",numeroBinario)
        
-        if ope.__contains__("X"):
+        if Operando.__contains__("X"):
             rr="00"
             formula=formula.replace("rr",rr)
-        if ope.__contains__("Y"):
+        if Operando.__contains__("Y"):
             rr="01"
             formula=formula.replace("rr",rr)
-        if ope.__contains__("SP"):
+        if Operando.__contains__("SP"):
             rr="10"
             formula=formula.replace("rr",rr)
-        if ope.__contains__("PC"):
+        if Operando.__contains__("PC"):
             rr="11"
             formula=formula.replace("rr",rr)
         else:
             pass
-        print(formula)
+        
         valorCM=hex(int(formula,2)).replace("0x","")
-        print(codigoMaquina.replace("[","").replace("]","").replace("'","")+valorCM.zfill(2))
+        print(codigoMaquina.replace("[","").replace("]","").replace("'","")+valorCM.zfill(2).upper())
         
     else:
         pass
@@ -502,119 +501,120 @@ def codigoMaquinaIDX5( operando, codigoMaquina):
 
  
 def codigoMaquinaIdx9(operando, codigoMaquina):
-    formula="111rr0zs" 
-
-    ope= operando.strip()
     
+    formula="111rr0zs"
+    operando= operando.strip()
     
-    if ope.__contains__("X'"):
+    if operando.__contains__("X'"):
         rr='00'
         formula=formula.replace("rr",rr)
         formula=formula.replace("z",'0')
         formula=formula.replace("s",'0')
-    if ope.__contains__("Y'"):
+    if operando.__contains__("Y'"):
         rr='01'
         formula=formula.replace("rr",rr)
         formula=formula.replace("z",'0')
         formula=formula.replace("s",'0')
-    if ope.__contains__("SP'"):
+    if operando.__contains__("SP'"):
         rr='10'
         formula=formula.replace("rr",rr)
         formula=formula.replace("z",'0')
         formula=formula.replace("s",'0')
-    if ope.__contains__("PC'"):
+    if operando.__contains__("PC'"):
         rr='11'
         formula=formula.replace("rr",rr)
         formula=formula.replace("z",'0')
         formula=formula.replace("s",'0')
 
-    num= ope[0:7].replace("X","").replace("Y","").replace("SP","").replace("PC","").replace(",","").replace("'","").replace("(","").strip()
-    num= hex(int(num,10))
-    print(formula)
-    op= int(formula, 2)
-    operandoHex= hex(op).replace("0x","").upper()
-    operandoUnido= str(codigoMaquina)+str(operandoHex)+str(num).replace("0x","").upper()
+    #Hace las operaciones de conversiona binario, luego complemento 2 y al final lo pasa a Hexadecimal y lo concatena 
+    numeroDecimal= int(operando[0:7].replace("X","").replace("Y","").replace("SP","").replace("PC","").replace(",","").replace("'","").replace("(","").strip())
+    aBinarioC2 = lambda x, count=8: "".join(map(lambda y:str((x>>y)&1), range(count-1, -1, -1)))  #Saca el Complemento 2
+    numBinario=aBinarioC2(numeroDecimal)
+    complementoDOS=hex(int(numBinario,2))
+   
+    operandoHex= hex(int(formula,2)).replace("0x","").upper()
+    operandoUnido= str(codigoMaquina)+str(operandoHex)+complementoDOS.replace("0x","").replace("-","").upper().zfill(2)
     print(operandoUnido.replace("[","").replace("]","").replace("'",""))
 
 def codigoMaquinaIdx16(operando, codigoMaquina):
+    
     formula="111rr0zs" 
-
-    ope= operando.strip()
-    if ope.__contains__("X'"):
+    operando= operando.strip()
+    if operando.__contains__("X'"):
         rr='00'
         formula=formula.replace("rr",rr)
         formula=formula.replace("z",'1')
         formula=formula.replace("s",'0')
-    if ope.__contains__("Y'"):
+    if operando.__contains__("Y'"):
         rr='01'
         formula=formula.replace("rr",rr)
         formula=formula.replace("z",'1')
         formula=formula.replace("s",'0')
-    if ope.__contains__("SP'"):
+    if operando.__contains__("SP'"):
         rr='10'
         formula=formula.replace("rr",rr)
         formula=formula.replace("z",'1')
         formula=formula.replace("s",'0')
-    if ope.__contains__("PC'"):
+    if operando.__contains__("PC'"):
         rr='11'
         formula=formula.replace("rr",rr)
         formula=formula.replace("z",'1')
         formula=formula.replace("s",'0')
 
-    num= ope[0:7].replace("X","").replace("Y","").replace("SP","").replace("PC","").replace(",","").replace("'","").replace("(","").strip()
-    num= hex(int(num,10))
-    print(formula)
-    op= int(formula, 2)
-    operandoHex= hex(op).replace("0x","").upper()
-    operandoUnido= str(codigoMaquina)+str(operandoHex)+str(num).replace("0x","").upper()
+    #Hace las operaciones de conversiona binario, al final lo pasa a Hexadecimal y lo concatena 
+    numeroDecimal= operando[0:7].replace("X","").replace("Y","").replace("SP","").replace("PC","").replace(",","").replace("'","").replace("(","").strip()
+    numeroDecimal= hex(int(numeroDecimal,10))
+    aux= int(formula, 2)
+    operandoHex= hex(aux).replace("0x","").upper()
+    operandoUnido= str(codigoMaquina)+str(operandoHex)+str(numeroDecimal).replace("0x","").upper()
     print(operandoUnido.replace("[","").replace("]","").replace("'",""))
 
 def codigoMaquinaIdxPrePost(operando, codigoMaquina):
     formula="rr1pnnnn" 
 
-    ope= operando.strip()
+    operando= operando.strip()
 
     #REGISTROS
     #X
-    if ope.__contains__("+X") or ope.__contains__('-X'):
+    if operando.__contains__("+X") or operando.__contains__('-X'):
         rr='00'
         formula=formula.replace("rr",rr)
         p='0'
         formula=formula.replace("p", p)
-    elif ope.__contains__("X+") or ope.__contains__('X-'):
+    elif operando.__contains__("X+") or operando.__contains__('X-'):
         rr='00'
         formula=formula.replace("rr",rr)
         p='1'
         formula=formula.replace("p", p)
     #Y
-    if ope.__contains__("+Y") or ope.__contains__('-Y'):
+    if operando.__contains__("+Y") or operando.__contains__('-Y'):
         rr='01'
         formula=formula.replace("rr",rr)
         p='0'
         formula=formula.replace("p", p)
-    elif ope.__contains__("Y+") or ope.__contains__('Y-'):
+    elif operando.__contains__("Y+") or operando.__contains__('Y-'):
         rr='01'
         formula=formula.replace("rr",rr)
         p='1'
         formula=formula.replace("p", p)
     #SP
-    if ope.__contains__("+SP") or ope.__contains__('-SP'):
+    if operando.__contains__("+SP") or operando.__contains__('-SP'):
         rr='10'
         formula=formula.replace("rr",rr)
         p='0'
         formula=formula.replace("p", p)
-    elif ope.__contains__("SP+") or ope.__contains__('SP-'):
+    elif operando.__contains__("SP+") or operando.__contains__('SP-'):
         rr='10'
         formula=formula.replace("rr",rr)
         p='1'
         formula=formula.replace("p", p)
     #PC
-    if ope.__contains__("+PC") or ope.__contains__('-PC'):
+    if operando.__contains__("+PC") or operando.__contains__('-PC'):
         rr='11'
         formula=formula.replace("rr",rr)
         p='0'
         formula=formula.replace("p", p)
-    elif ope.__contains__("PC+") or ope.__contains__('PC-'):
+    elif operando.__contains__("PC+") or operando.__contains__('PC-'):
         rr='11'
         formula=formula.replace("rr",rr)
         p='1'
@@ -622,100 +622,98 @@ def codigoMaquinaIdxPrePost(operando, codigoMaquina):
 
     regex= r"[^0-9]"    
     subst = ""
-    val= re.sub(regex, subst, operando, 0, re.MULTILINE).strip()
-    print(val)
-    print(ope)
+    valor= re.sub(regex, subst, operando, 0, re.MULTILINE).strip()
 
-    if ope.__contains__("-"):
-        if val=='8': 
+    if operando.__contains__("-"):
+        if valor=='8': 
             n='1000' 
             formula=formula.replace("nnnn", n)
-        elif val=='7':
+        elif valor=='7':
             n='1001' 
             formula=formula.replace("nnnn", n)
-        elif val=='6':
+        elif valor=='6':
             n='1010' 
             formula=formula.replace("nnnn", n)
-        elif val=='5':
+        elif valor=='5':
             n='1011' 
             formula=formula.replace("nnnn", n)
-        elif val=='4':
+        elif valor=='4':
             n='1100' 
             formula=formula.replace("nnnn", n)
-        elif val=='3':
+        elif valor=='3':
             n='1101' 
             formula=formula.replace("nnnn", n)
-        elif val=='2':
+        elif valor=='2':
             n='1110' 
             formula=formula.replace("nnnn", n)
-        elif val=='1':
+        elif valor=='1':
             n='1111'
             formula=formula.replace("nnnn", n)
-    elif ope.__contains__("+"):
-        if val=='8':
+    elif operando.__contains__("+"):
+        if valor=='8':
             n='0111' 
             formula=formula.replace("nnnn", n)
-        elif val=='7':
+        elif valor=='7':
             n='0110' 
             formula=formula.replace("nnnn", n)
-        elif val=='6':
+        elif valor=='6':
             n='0101' 
             formula=formula.replace("nnnn", n)
-        elif val=='5':
+        elif valor=='5':
             n='0100' 
             formula=formula.replace("nnnn", n)
-        elif val=='4':
+        elif valor=='4':
             n='0011' 
             formula=formula.replace("nnnn", n)
-        elif val=='3':
+        elif valor=='3':
             n='0010' 
             formula=formula.replace("nnnn", n)
-        elif val=='2':
+        elif valor=='2':
             n='0001' 
             formula=formula.replace("nnnn", n)
-        elif val=='1':
+        elif valor=='1':
             n='0000'
             formula=formula.replace("nnnn", n)
 
-    print(formula)        
-    op= int(formula, 2)
-    operandoHex= hex(op).replace("0x","").upper()
+    #Hace las operaciones de conversion a binario, al final lo pasa a Hexadecimal y lo concatena     
+    aux= int(formula, 2)
+    operandoHex= hex(aux).replace("0x","").upper()
     operandoUnido= str(codigoMaquina)+str(operandoHex)
     print(operandoUnido.replace("[","").replace("]","").replace("'",""))
 
 def codigoMaquinaIdxAcum(operando, codigoMaquina):
+    
     formula="111rr1aa"
-
-    ope= operando.strip()
-    print(ope)
+    operando= operando.strip()
+    
     #REGISTROS
-    if ope.__contains__("X'"):
+    if operando.__contains__("X'"):
         rr='00'
         formula=formula.replace("rr",rr)
-    if ope.__contains__("Y'"):
+    if operando.__contains__("Y'"):
         rr='01'
         formula=formula.replace("rr",rr)
-    if ope.__contains__("SP'"):
+    if operando.__contains__("SP'"):
         rr='10'
         formula=formula.replace("rr",rr)
-    if ope.__contains__("PC'"):
+    if operando.__contains__("PC'"):
         rr='11'
         formula=formula.replace("rr",rr)
 
     #ACUMULADORES
-    if ope.__contains__("'A"):
+    if operando.__contains__("'A"):
         aa='00'
         formula=formula.replace("aa",aa)
-    if ope.__contains__("'B"):
+    if operando.__contains__("'B"):
         aa='01'
         formula=formula.replace("aa",aa)
-    if ope.__contains__("'D"):
+    if operando.__contains__("'D"):
         aa='10'
         formula=formula.replace("aa",aa)
 
-    print(formula)
-    op= int(formula, 2)
-    operandoHex= hex(op).replace("0x","").upper()
+    #Hace las operaciones de conversion a binario, al final lo pasa a Hexadecimal y lo concatena     
+    aux= int(formula, 2)
+    operandoHex= hex(aux).replace("0x","").upper()
     operandoUnido= str(codigoMaquina)+str(operandoHex)
     print(operandoUnido.replace("[","").replace("]","").replace("'",""))
 

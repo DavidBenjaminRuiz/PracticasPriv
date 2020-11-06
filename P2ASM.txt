@@ -4,9 +4,11 @@ VALOR2      EQU     12
             ORG     $0  
             SWI 
             LDAA    ,X
-            LDAA    -16,SP
+            LDAA    -16,X
+            STAB    -8,Y
             LDAA    255,X
             LDAA    -18,X
+            LDAA    -20,Y
             STAA    1,-SP
             STX     2,+SP
             LDAA    B,X
