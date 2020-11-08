@@ -1,12 +1,10 @@
-ET1         EQU     33
-VALOR1      EQU     22
-VALOR2      EQU     12
-            ORG     $0  
-            SWI 
-            LDAA    [10,X]
-            JMP     [D,PC]
-            LDAA    [31483,X]
-            ADCA    [D,X]
-            ADCB    [D,SP]
-            ADDA    [D,Y]
-            END               
+            ORG     $17
+UNO         EQU     $30
+DOS         EQU     $50
+            BRA     UNO
+            LBRA    DOS
+            BCS     UNO
+            LBCS    TRES
+TRES        BCS     DOS
+CUATRO      SWI 
+            END 
