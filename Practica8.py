@@ -199,6 +199,15 @@ def Relativo(DataFrame):
     valorCodigoMaquina= DataFrameFiltrado["Total de Bytes"].loc[valor]
     return str(valorCodigoMaquina.values)   
 
+def totalDeBytes(DataFrame):
+    datos_Tabop= pd.read_excel(ruta_Archivo, sheet_name="Hoja1", header=3)
+    DataFrame= pd.DataFrame(datos_Tabop)
+    DataFrameFiltrado=DataFrame[DataFrame['CODOP'].isin(lista)]     #Busca el codop en el tabop 
+
+    valor= (DataFrameFiltrado['Total de Bytes'].all()) and (DataFrameFiltrado["Addr. Mode"]== "REL")
+    valorCodigoMaquina= DataFrameFiltrado["Total de Bytes"].loc[valor]
+    return str(valorCodigoMaquina.values)  
+
 #FUNCION QUE NOS PERMITE SABER QUE TIPO DE INMEDIATO ES
 def Inmediato(Dataframe):
 
@@ -269,7 +278,7 @@ def escribirArchivoTemporal(CONTLOC,ETIQUETA,CODOP,result,VALOR_EQU):
         archivoTmp.write("VALOR EQU" + "\t" + str(VALOR_EQU).strip() + "\t" + str(ETIQUETA).strip() + "\t" + str(CODOP).strip() + "\t"+ str(result) + "\n")
 
 #Analiza la directiva y devuelve el valor de bytes para aumentar al contloc
-def analizaDirectiva(codop, result,operando):
+def analizaDirectiva(codop, result,operando, totalBytes):
     #Directivas de constantes
     pequeño=r"[\s][#]?([%][0-1]{1,8}|[$][0-9A-F]{1,2}|[@][0-3][0-7]?[0-7]?|\d|\d\d|1[0-9][0-9]|2[0-4][0-9]|2[5][0-5])(')"
     grande=r"[\s][#]?([%][0-1]{1,16}|[$][0-9A-F]{1,4}|[@][0-3][0-7]?[0-7]?[0-7]?[0-7]?[0-7]?|[@][0-1][0-7][0-7][0-7][0-7][0-7]|\d|\d\d|\d\d\d|\d\d\d\d|[0-5]\d\d\d\d[0-6][0-4][0-9][0-9][0-9]|[0-6][0-5][0-5][0-3][0-5])(')"
@@ -286,7 +295,7 @@ def analizaDirectiva(codop, result,operando):
         return 2
         
     if codop.strip()== "FCC" and  operando != 'None':
-        return len(operando)
+        return len(result)
 
     if codop.strip()== "DS" or codop.strip()== "DS.B" or codop.strip()== "RMB":
         return int(result)
@@ -306,7 +315,7 @@ def analizaDirectiva(codop, result,operando):
         if inherente.group() == "Cuatro":
             return 4    
     else:
-        return 0
+        return int(totalBytes)
    
 #Valida las condiciones necesarias de las directivas
 def validarDirectivas(aumentocontloc, etiqueta, codop, result, operando):
@@ -770,19 +779,35 @@ def codigoMaquinaRel8(tipoRel, operando, direccionOrigen, direccionDestino, codi
     destinoDecimal= int(direccionDestino,16)
     salto= origenDecimal-destinoDecimal
     if salto >-128 and salto < 127:
-        DESPLAZAMIENTO= hex(salto).lstrip('0x').upper().zfill(2)
-        print(rr+DESPLAZAMIENTO)
+        if salto <-1 and salto >-128:
+            aBinarioC2 = lambda x, count=8: "".join(map(lambda y:str((x>>y)&1), range(count-1, -1, -1)))  #Saca el Complemento 2
+            numBinario=aBinarioC2(salto)
+            complementoDOS=hex(int(numBinario,2))
+            DESPLAZAMIENTO=complementoDOS.replace("0x","").replace("-","").upper().zfill(2)
+            print(rr+DESPLAZAMIENTO)
+        else:
+            DESPLAZAMIENTO= hex(salto).lstrip('0x').upper().zfill(2)
+            print(rr+DESPLAZAMIENTO)
     else:
         print("RANGO DEL DESPLAZAMIENTO NO VÁLIDO")
 
 def codigoMaquinaRel16(tipoRel, operando, direccionOrigen, direccionDestino, codigoMaquina):
     rr= codigoMaquina.replace("[","").replace("]","")
-    origenDecimal= int(direccionOrigen,16)
+    print(direccionOrigen)
+    print(direccionDestino)
+    origenDecimal= int(str(direccionOrigen),16)
     destinoDecimal= int(direccionDestino,16)
     salto= origenDecimal-destinoDecimal
     if salto >-132768 and salto < 32767:
-        DESPLAZAMIENTO= hex(salto).lstrip('0x').upper().zfill(4)
-        print(rr+DESPLAZAMIENTO)
+        if salto <-1 and salto >-132768:
+            aBinarioC2 = lambda x, count=16: "".join(map(lambda y:str((x>>y)&1), range(count-1, -1, -1)))  #Saca el Complemento 2
+            numBinario=aBinarioC2(salto)
+            complementoDOS=hex(int(numBinario,2))
+            DESPLAZAMIENTO=complementoDOS.replace("0x","").replace("-","").upper().zfill(4)
+            print(rr+DESPLAZAMIENTO)
+        else:   
+            DESPLAZAMIENTO= hex(salto).lstrip('0x').upper().zfill(4)
+            print(rr+DESPLAZAMIENTO)
     else:
         print("RANGO DEL DESPLAZAMIENTO NO VÁLIDO")        
 
@@ -816,7 +841,7 @@ def validarExistenciaEtiqueta( filename,operando):
             valor= line[-5]+ line[-4] + line[-3] +line[-2]+line[-1]
             if str(valorEtiqueta).strip() in line:
                 return valor.strip()
-    return False
+    return "Etiqueta no encontrada"
 
 
 
@@ -986,13 +1011,14 @@ for i in range(0, len(lineas)):
             
         #Escribe en el archivoTMP segun sea necesario
     if codop.strip() != "EQU" and codop.strip() != "ORG" and errllevaOp !=1 and errNollevaOp !=1:
-        # contlocHEX=hex(CONTLOC).lstrip('0x').zfill(4).upper()
+        contlocHEX=hex(CONTLOC).lstrip('0x').zfill(4).upper()
         escribirArchivoTemporal(hex(CONTLOC).lstrip('0x').upper().zfill(4), etiqueta, codop, operandoDefinitivo, VALOR_EQU )
         if t_ETIQUETA(lineas[i]) is not None:
             escribeTABSIM(hex(CONTLOC).lstrip('0x').upper().zfill(4), etiqueta, VALOR_EQU, codop)
-        aumentoCONTLOC=int(analizaDirectiva(codop, operandoDefinitivo,operando))   #Calcula el aumento del contloc
+        totalBytes= totalDeBytes(Dataframe).replace("[","").replace("]","").replace("'","").replace(".","")
+        aumentoCONTLOC=int(analizaDirectiva(codop, operandoNumerico,operando,totalBytes))   #Calcula el aumento del contloc
         CONTLOC= int(CONTLOC) + int(aumentoCONTLOC)
-        validarDirectivas(aumentoCONTLOC, etiqueta, codop, operandoDefinitivo, operando)
+        validarDirectivas(aumentoCONTLOC, etiqueta, codop, operandoNumerico, operando)
         
 
     elif codop.strip() == "EQU":
@@ -1101,12 +1127,15 @@ for i in range(0, len(lineas)):
         filename= "TABSIM.txt"
         valorCM= valorCodigoMaquina(Dataframe, lista, modoDir="REL")
         tipoDeRel= IdentificarTipoRelativo(codop)
-        valorOrigen= validarExistenciaEtiqueta(filename, operando)
+        valorOrigen= str(validarExistenciaEtiqueta(filename, operando))
         valorDestino= hex(CONTLOC).lstrip('0x').upper().zfill(4)
-        if tipoDeRel == 8:
-            codigoMaquinaRel8(tipoDeRel, operando, valorOrigen, valorDestino , valorCM)
-        if tipoDeRel == 16:
-            codigoMaquinaRel16(tipoDeRel, operando, valorOrigen, valorDestino , valorCM)
+        if valorOrigen != "Etiqueta no encontrada":
+            if tipoDeRel == 8:
+                codigoMaquinaRel8(tipoDeRel, operando, valorOrigen, valorDestino , valorCM)
+            if tipoDeRel == 16:
+                codigoMaquinaRel16(tipoDeRel, operando, valorOrigen, valorDestino , valorCM)
+        else:
+            pass   
     else:
         pass    
     

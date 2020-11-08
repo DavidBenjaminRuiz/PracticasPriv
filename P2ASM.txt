@@ -1,10 +1,6 @@
-            ORG     $17
-UNO         EQU     $30
-DOS         EQU     $50
+            ORG     $0
+UNO         DS      10
             BRA     UNO
+DOS         DS      4096
             LBRA    DOS
-            BCS     UNO
-            LBCS    TRES
-TRES        BCS     DOS
-CUATRO      SWI 
-            END 
+            END  
